@@ -14,74 +14,94 @@ import { downloadMarkdown, parseMarkdown } from '@core/utils/markdown-export.uti
   standalone: true,
   imports: [FormsModule, NgClass, NgIf, RouterLink, MarkdownComponent],
   template: `
-    <div class="container editor-page">
+    <div class="editor-page">
       <header class="page-head">
-        <a routerLink="/admin" class="back">&larr; Back to drafts</a>
+        <a routerLink="/admin" class="back">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Drafts
+        </a>
         <h1>{{ isEditing ? 'Edit post' : 'New post' }}</h1>
       </header>
 
-      <p *ngIf="error()" class="error">{{ error() }}</p>
-      <p *ngIf="saved()" class="ok">Saved.</p>
+      <div *ngIf="error()" class="alert alert-error">{{ error() }}</div>
+      <div *ngIf="saved()" class="alert alert-ok">Saved.</div>
 
       <form #f="ngForm" (ngSubmit)="save()" novalidate class="form">
         <label class="field">
-          <span>Title</span>
+          <span class="label">Title</span>
           <input
             name="title"
             [(ngModel)]="model.title"
             (ngModelChange)="onTitleChange($event)"
             maxlength="200"
+            placeholder="A short, clear title"
             required
           />
         </label>
 
         <div class="row">
           <label class="field">
-            <span>Slug <small class="hint">lowercase a-z, 0-9, hyphens</small></span>
+            <span class="label">Slug</span>
             <input
               name="slug"
               [(ngModel)]="model.slug"
               [readonly]="isEditing"
               [ngClass]="{ invalid: !slugValid() }"
+              placeholder="lowercase-with-hyphens"
               required
             />
           </label>
           <label class="field">
-            <span>Date</span>
+            <span class="label">Date</span>
             <input type="date" name="date" [(ngModel)]="model.date" required />
           </label>
         </div>
 
         <label class="field">
-          <span>Description</span>
-          <input name="description" [(ngModel)]="model.description" maxlength="400" />
+          <span class="label">Description</span>
+          <input
+            name="description"
+            [(ngModel)]="model.description"
+            maxlength="400"
+            placeholder="One-sentence summary for the blog list"
+          />
         </label>
 
         <label class="field">
-          <span>Tags <small class="hint">comma-separated</small></span>
-          <input name="tagsStr" [(ngModel)]="tagsStr" placeholder="ai, llm, agents" />
+          <span class="label">Tags</span>
+          <input
+            name="tagsStr"
+            [(ngModel)]="tagsStr"
+            placeholder="ai, llm, agents (comma-separated)"
+          />
         </label>
 
         <label class="checkbox">
           <input type="checkbox" name="draft" [(ngModel)]="model.draft" />
-          <span>Mark as draft (excluded from public site when exported)</span>
+          <span>Mark as draft</span>
         </label>
 
         <label class="field">
-          <span>Content (Markdown)</span>
+          <span class="label">Content</span>
           <textarea
             name="content"
             [(ngModel)]="model.content"
-            rows="18"
+            rows="16"
             spellcheck="true"
-            placeholder="Write Markdown here..."
+            placeholder="Write Markdown here…"
           ></textarea>
         </label>
 
         <div class="actions">
-          <button type="submit" class="btn btn-primary">{{ isEditing ? 'Update' : 'Create' }}</button>
-          <button type="button" class="btn btn-ghost" (click)="export()" [disabled]="!isEditing">Export .md</button>
+          <button type="submit" class="btn btn-primary">
+            {{ isEditing ? 'Save changes' : 'Create draft' }}
+          </button>
+          <button type="button" class="btn btn-ghost" (click)="export()" [disabled]="!isEditing">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export .md
+          </button>
           <label class="btn btn-ghost import-btn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Import .md
             <input type="file" accept=".md,text/markdown" (change)="onImport($event)" hidden />
           </label>
@@ -90,68 +110,156 @@ import { downloadMarkdown, parseMarkdown } from '@core/utils/markdown-export.uti
       </form>
 
       <section class="preview" *ngIf="model.content">
-        <h2>Preview</h2>
+        <header class="preview-head">
+          <span class="eyebrow">Preview</span>
+        </header>
         <markdown [data]="model.content"></markdown>
       </section>
     </div>
   `,
   styles: [`
-    .editor-page { padding: 3rem 0; max-width: 880px; }
+    :host { display: block; }
+    .editor-page {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3.5rem 1.5rem 4rem;
+    }
     .page-head { margin-bottom: 1.5rem; }
-    .back { font-size: 0.875rem; color: var(--fg-muted); text-decoration: none; }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      margin-bottom: 0.75rem;
+    }
     .back:hover { color: var(--accent); }
-    h1 { font-size: 2rem; margin: 0.5rem 0 0; }
-    .form { display: grid; gap: 1rem; }
-    .field { display: grid; gap: 0.35rem; }
-    .field span { font-weight: 600; font-size: 0.92rem; }
-    .field .hint { color: var(--fg-muted); font-weight: 400; font-size: 0.78rem; margin-left: 0.4rem; }
+    h1 { font-size: 2rem; margin: 0; letter-spacing: -0.02em; }
+
+    .alert {
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.92rem;
+      margin: 0 0 1.25rem;
+      border: 1px solid transparent;
+    }
+    .alert-error { color: #b53030; background: color-mix(in srgb, #d23f3f 10%, transparent); border-color: color-mix(in srgb, #d23f3f 30%, transparent); }
+    .alert-ok { color: #1f6f3a; background: color-mix(in srgb, #2a8a3e 10%, transparent); border-color: color-mix(in srgb, #2a8a3e 30%, transparent); }
+
+    .form { display: grid; gap: 1.1rem; }
+    .field { display: grid; gap: 0.4rem; }
+    .label {
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--fg-muted);
+    }
     .field input,
     .field textarea {
       width: 100%;
-      padding: 0.65rem 0.85rem;
+      padding: 0.7rem 0.9rem;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       background: var(--bg);
       color: var(--fg);
       font-family: inherit;
       font-size: 0.95rem;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
     }
-    .field textarea { font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.6; resize: vertical; }
+    .field textarea {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.65;
+      resize: vertical;
+      min-height: 360px;
+    }
+    .field input::placeholder,
+    .field textarea::placeholder { color: var(--fg-muted); opacity: 0.6; }
     .field input:focus,
-    .field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
     .field input.invalid { border-color: #d23f3f; }
+    .field input.invalid:focus { box-shadow: 0 0 0 3px color-mix(in srgb, #d23f3f 18%, transparent); }
     .field input[readonly] { background: var(--bg-elev); color: var(--fg-muted); cursor: not-allowed; }
+
     .row { display: grid; grid-template-columns: 1fr 200px; gap: 1rem; }
     @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
-    .checkbox { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--fg-muted); font-size: 0.92rem; }
-    .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.5rem; }
+
+    .checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: var(--fg-muted);
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
     .btn {
       display: inline-flex;
       align-items: center;
-      padding: 0.55rem 1.1rem;
+      gap: 0.4rem;
+      padding: 0.6rem 1.1rem;
       border-radius: 999px;
       text-decoration: none;
       font-weight: 600;
-      font-size: 0.9rem;
-      border: 0;
+      font-size: 0.88rem;
+      border: 1px solid transparent;
       cursor: pointer;
-      transition: transform 120ms ease, background 120ms ease;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
     }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: var(--accent); color: #fff; box-shadow: var(--shadow-md); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover:not(:disabled) { background: var(--accent-strong); transform: translateY(-1px); }
-    .btn-ghost { color: var(--fg); border: 1px solid var(--border); background: transparent; }
+    .btn-ghost { color: var(--fg); border-color: var(--border); background: transparent; }
     .btn-ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-    .btn-danger { background: #d23f3f; color: #fff; }
-    .btn-danger:hover:not(:disabled) { background: #b53030; }
+    .btn-danger { background: transparent; color: #d23f3f; border-color: color-mix(in srgb, #d23f3f 40%, transparent); margin-left: auto; }
+    .btn-danger:hover:not(:disabled) { background: #d23f3f; color: #fff; border-color: #d23f3f; }
     .import-btn { cursor: pointer; }
-    .error { color: #d23f3f; background: color-mix(in srgb, #d23f3f 10%, transparent); padding: 0.65rem 0.9rem; border-radius: var(--radius); margin: 0; }
-    .ok { color: #2a8a3e; background: color-mix(in srgb, #2a8a3e 12%, transparent); padding: 0.65rem 0.9rem; border-radius: var(--radius); margin: 0; }
-    .preview { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border); }
-    .preview h2 { margin: 0 0 1rem; font-size: 1.2rem; color: var(--fg-muted); }
-    :host ::ng-deep .preview markdown { display: block; line-height: 1.75; }
-    :host ::ng-deep .preview markdown pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; }
-    :host ::ng-deep .preview markdown :not(pre) > code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; }
+
+    .preview {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .preview-head { margin-bottom: 1.25rem; }
+    .preview .eyebrow {
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--fg-muted);
+    }
+    :host ::ng-deep .preview markdown { display: block; line-height: 1.75; font-size: 1rem; }
+    :host ::ng-deep .preview markdown h1 { font-size: 1.6rem; margin: 1.5rem 0 0.5rem; }
+    :host ::ng-deep .preview markdown h2 { font-size: 1.3rem; margin: 1.5rem 0 0.5rem; }
+    :host ::ng-deep .preview markdown h3 { font-size: 1.1rem; margin: 1.25rem 0 0.4rem; }
+    :host ::ng-deep .preview markdown p { margin: 1rem 0; }
+    :host ::ng-deep .preview markdown pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); }
+    :host ::ng-deep .preview markdown :not(pre) > code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
+    :host ::ng-deep .preview markdown a { color: var(--accent); }
+    :host ::ng-deep .preview markdown blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; color: var(--fg-muted); margin: 1.5rem 0; }
+
+    @media (max-width: 540px) {
+      .editor-page { padding: 2rem 1rem 3rem; }
+      h1 { font-size: 1.6rem; }
+      .btn-danger { margin-left: 0; }
+    }
   `],
 })
 export class AdminEditorComponent implements OnInit {
