@@ -43,3 +43,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Personal notes (not committed — local only)
+MY-GUIDE.md
+*.local.md
+/notes/
